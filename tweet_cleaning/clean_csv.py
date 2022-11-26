@@ -11,7 +11,7 @@ def determine_tweet_type(row):
     replied_id = row['referenced_tweets.replied_to.id']
     retweet_id = row['referenced_tweets.retweeted.id']
     quote_id = row['referenced_tweets.quoted.id']
-    
+
     if not pd.isna(replied_id):
         return 'reply'
     elif not pd.isna(retweet_id):
