@@ -65,7 +65,9 @@ def process_dataframe(df, file_name, rep_universe: RepresentativeUniverse):
                                 'entities.cashtags': 'cashtags',
                                 'entities.hashtags': 'hashtags',
                                 'entities.mentions': 'mentions',
-                                'entities.urls': 'urls'})
+                                'entities.urls': 'urls',
+                                'author.username': 'author_username',
+                                'author.name': 'author_name'})
 
         # set proper column types
         df = df.astype({'tweet_type': 'category',
