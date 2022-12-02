@@ -13,7 +13,7 @@ def convert_to_df(file):
     logging.info(f'Converting {file_name}')
     if 'test' not in file_name:
         with open(file, 'r') as infile:
-            with open(f'./out/{file_name}.csv', 'w') as outfile:
+            with open(f'./temp/{file_name}.csv', 'w') as outfile:
                 converter = CSVConverter(infile=infile, outfile=outfile)
                 converter.process()
 
@@ -51,7 +51,7 @@ def remove_out_of_office_tweets(df, rep: Representative):
     return new_df
 
 
-def process_dataframe(df, file_name, rep_universe: RepresentativeUniverse):
+def process_dataframe(df, file_name, rep_universe: RepresentativeUniverse, write_name: str = None):
         # process columns
         df['tweet_type'] = df.apply(determine_tweet_type, axis=1)
         df['congressional_like'] = True if 'likes' in file_name else False
@@ -88,7 +88,8 @@ def process_dataframe(df, file_name, rep_universe: RepresentativeUniverse):
                         'cashtags': 'object'})
 
         # write
-        df.to_parquet(f'./out/{file_name}.parquet.gzip',
+        to_write = write_name if write_name else file_name
+        df.to_parquet(f'./out/{to_write}.parquet.gzip',
                       index=False,
                       compression='gzip')
 
@@ -98,7 +99,7 @@ def create_rep_universe() -> RepresentativeUniverse:
         return pickle.load(fp)
 
 
-def process_df(file, rep_universe):
+def process_df(file, rep_universe, write_name=None):
     file_name = file.split('/')[-1].split('.')[0]
     logging.info(f'Converting {file_name}')
 
@@ -113,7 +114,7 @@ def process_df(file, rep_universe):
                                                 'entities.mentions', 'entities.urls', 'author.username', 'author.name',
                                                 'referenced_tweets.replied_to.id', 'referenced_tweets.retweeted.id',
                                                 'referenced_tweets.quoted.id'])
-        process_dataframe(df, file_name, rep_universe)
+        process_dataframe(df, file_name, rep_universe, write_name=write_name)
     else:
         logging.info('File too big. Breaking into chunks.')
         with pd.read_csv(file,
@@ -128,7 +129,7 @@ def process_df(file, rep_universe):
                          chunksize=453_241) as reader:  # chunksize calculated by estimating number of lines that will take up 3GB
             for idx, chunk in progress(enumerate(reader), leave=False):
                 logging.info(f'Converting chunk #{idx}')
-                process_dataframe(chunk, file_name=file_name + str(idx), rep_universe=rep_universe) 
+                process_dataframe(chunk, file_name=file_name + str(idx), rep_universe=rep_universe, write_name=write_name) 
 
 
 def main():

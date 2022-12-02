@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from datetime import datetime
 import random
 import pickle
 from enum import Enum
@@ -25,6 +26,37 @@ class Representative:
 
     def add_term(self, term: Term) -> None:
         self.terms.append(term)
+
+    def get_total_term_boundaries(self) -> List[Tuple[datetime, datetime]]:
+        """
+        Returns a list of tuples with boundary conditions (inclusive, exclusive)
+        """
+        yes_115 = Term._115 in self.terms
+        yes_116 = Term._116 in self.terms
+        yes_117 = Term._117 in self.terms
+
+        if yes_115 and not yes_116 and not yes_117:
+            return [(datetime(2017, 1, 3), datetime(2019, 1, 3))]
+
+        if not yes_115 and yes_116 and not yes_117:
+            return [(datetime(2019, 1, 3), datetime(2021, 1, 3))]
+
+        if not yes_115 and not yes_116 and yes_117:
+            return [(datetime(2021, 1, 3), datetime(2022, 10, 28))]
+
+        if yes_115 and yes_116 and not yes_117:
+            return [(datetime(2017, 1, 3), datetime(2021, 1, 3))]
+
+        if not yes_115 and yes_116 and yes_117:
+            return [(datetime(2019, 1, 3), datetime(2022, 10, 28))]
+
+        if yes_115 and not yes_116 and yes_117:
+            return [(datetime(2017, 1, 3), datetime(2019, 1, 3)), ((datetime(2021, 1, 3), datetime(2022, 10, 28)))]
+
+        if yes_115 and yes_116 and yes_117:
+            return [(datetime(2017, 1, 3), datetime(2022, 10, 28))]
+
+        return []
 
 
 class RepresentativeUniverse:
@@ -142,13 +174,10 @@ def main():
         congress_117 = pickle.load(fp)
     rep_universe.add_term_for_all(Term._117, congress_117)
 
-    with open('rep_universe.pickle', 'wb') as fp:
-        pickle.dump(rep_universe, fp)
-
     # print(rep_universe)
     # rep_universe.describe_representatives()
-    # for _ in range(10):
-    #     print(rep_universe.pop_user_config())
+    for _ in range(10):
+        print(rep_universe.pop_user_config())
 
 
 if __name__ == "__main__":

@@ -45,6 +45,10 @@ def get_ids(df: pd.DataFrame) -> Set[int]:
     return set(df['id'].to_list())
 
 
+def get_count(df: pd.DataFrame) -> int:
+    return len(df['id'])
+
+
 def get_count_by_document(df: pd.DataFrame) -> pd.DataFrame:
     df['day'] = pd.DatetimeIndex(df.created_at).normalize()
     return df.groupby(['day']).count()
@@ -52,10 +56,14 @@ def get_count_by_document(df: pd.DataFrame) -> pd.DataFrame:
 
 def main():
     likes_crawler = TweetCrawler('likes')
-    likes_gb = likes_crawler.apply_function(get_count_by_document)
-    counts = pd.concat(list(likes_gb), axis=1).sum(axis=1)
-    with open('counts.pickle', 'wb') as fp:
-        pickle.dump(counts, fp)
+    likes_gb = likes_crawler.apply_function(get_count)
+    count = 0
+    for a in likes_gb:
+        count += a
+    print(count)
+    # counts = pd.concat(list(likes_gb), axis=1).sum(axis=1)
+    # with open('counts.pickle', 'wb') as fp:
+    #     pickle.dump(counts, fp)
 
 
 
