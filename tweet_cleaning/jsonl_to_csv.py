@@ -3,7 +3,7 @@ import logging
 import glob
 
 
-DATA_PATH = '../../twitter_data/'
+DATA_PATH = 'data'
 
 
 def main():

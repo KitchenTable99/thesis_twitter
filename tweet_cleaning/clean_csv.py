@@ -57,7 +57,7 @@ def process_dataframe(df, file_name, rep_universe: RepresentativeUniverse):
         df['congressional_like'] = True if 'likes' in file_name else False
 
         # drop unneeded columns
-        df = df.drop(columns=['referenced_tweets.replied_to.id', 'referenced_tweets.retweeted.id', 'referenced_tweets.quoted.id'])
+        df = df.drop(columns=['referenced_tweets.replied_to.id', 'referenced_tweets.quoted.id'])
 
         # drop unneeded rows
         if 'likes' in file_name:
@@ -79,7 +79,8 @@ def process_dataframe(df, file_name, rep_universe: RepresentativeUniverse):
                                 'entities.mentions': 'mentions',
                                 'entities.urls': 'urls',
                                 'author.username': 'author_username',
-                                'author.name': 'author_name'})
+                                'author.name': 'author_name',
+                                'referenced_tweets.retweeted.id': 'original_tweet_id'})
 
         # set proper column types
         df = df.astype({'tweet_type': 'category',

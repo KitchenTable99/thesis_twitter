@@ -78,12 +78,13 @@ def main():
     signal.signal(signal.SIGINT, stop_handler)
     client = Twarc2(bearer_token="AAAAAAAAAAAAAAAAAAAAAHNwiAEAAAAAF72%2Fj1mdKq00j%2FtZhNe6sL2yUng%3DdBSexd2M8w4mbWInSZm1EjEYt9FoES7FMyACFoBYlzXiiKNquZ")
     rep_universe = create_rep_universe()
+    total_reps = rep_universe.num_reps()
 
     logging.info('Like gathering beginning now.')
     while rep_universe and not STOP:
-        user_id, first_term = rep_universe.pop_user_config()
-        logging.info(f'{len(rep_universe.representatives)} representatives remaining')
+        user_id, _ = rep_universe.pop_user_config()
         logging.info(f'Gathering likes for user: {user_id}')
+        logging.info(f'Working on {rep_universe.num_reps()}/{total_reps}')
 
         for page_num, page in enumerate(client.liked_tweets(user_id)):
             if STOP:
@@ -91,9 +92,9 @@ def main():
             logging.info(f'Getting page {page_num}')
             process_likes_page(user_id, page)
 
-            if user_done(page, first_term):
-                logging.info(f'Reached terminal point for {user_id}')
-                break
+            # if user_done(page, first_term):
+            #     logging.info(f'Reached terminal point for {user_id}')
+            #     break
 
     if STOP:
         logging.info('Finishing due to keyboard interrupt')
@@ -104,4 +105,4 @@ def main():
 
 
 if __name__ == "__main__":
-    pass
+    main()

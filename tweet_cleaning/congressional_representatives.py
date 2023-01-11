@@ -176,8 +176,11 @@ def main():
 
     # print(rep_universe)
     # rep_universe.describe_representatives()
-    for _ in range(10):
-        print(rep_universe.pop_user_config())
+    # for _ in range(10):
+    #     print(rep_universe.pop_user_config())
+
+    with open('rep_universe.pickle', 'wb') as fp:
+        pickle.dump(rep_universe, fp)
 
 
 if __name__ == "__main__":

@@ -33,6 +33,9 @@ class RepresentativeUniverse:
     def __init__(self):
         self.representatives = []
 
+    def num_reps(self):
+        return len(self.representatives)
+
     def contains(self, rep: Representative) -> bool:
         return rep in self.representatives
 
