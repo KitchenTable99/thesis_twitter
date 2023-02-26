@@ -5,7 +5,7 @@ import logging
 import pandas as pd
 from tqdm import tqdm as progress
 from twarc_csv import CSVConverter
-from congressional_representatives import Representative, RepresentativeUniverse, Term
+from congressional_representatives import Representative, RepresentativeUniverse
 
 
 def convert_to_df(file):
@@ -16,7 +16,6 @@ def convert_to_df(file):
             with open(f'./temp/{file_name}.csv', 'w') as outfile:
                 converter = CSVConverter(infile=infile, outfile=outfile)
                 converter.process()
-
 
 
 def determine_tweet_type(row):
