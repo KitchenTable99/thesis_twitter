@@ -14,11 +14,8 @@ DATA_PATH = '/home/ec2-user/congressional_tweets'
 
 class TweetCrawler:
 
-    parquet_count: int
-    dfs: List[pd.DataFrame]
-
     def __init__(self, crawler_type: CrawlerType):
-        self.dfs = self.read_dfs(crawler_type)
+        self.paths = self.read_dfs(crawler_type)
         if crawler_type == 'test':
             self.parquet_count = 1
         elif crawler_type == 'full':
@@ -26,7 +23,7 @@ class TweetCrawler:
         else:
             self.parquet_count = -1
 
-    def read_dfs(self, crawler_type: CrawlerType) -> List[pd.DataFrame]:
+    def read_dfs(self, crawler_type: CrawlerType):
         if crawler_type == 'harvard':
             paths = [file for file in glob.glob(f'{DATA_PATH}/full_harvard/*parquet*', recursive=True) if 'likes' not in file]
         elif crawler_type == 'test':
@@ -37,10 +34,12 @@ class TweetCrawler:
             paths = [file for file in glob.glob(f'{DATA_PATH}/depth_2/*parquet*', recursive=True)]
         else:
             paths = [file for file in glob.glob(f'{DATA_PATH}/**/*parquet*', recursive=True) if 'likes' in file]
-        return [pd.read_parquet(path) for path in progress(paths, desc='Reading dataframes')]
+
+        return paths
 
     def apply_function(self, callable: Callable[[pd.DataFrame], T]) -> Generator[T, None, None]:
-        for df in self.dfs:
+        for df_path in progress(self.paths):
+            df = pd.read_parquet(df_path)
             yield callable(df)
 
 
@@ -89,7 +88,7 @@ def main():
 
 
 def likes():
-    likes_crawler = TweetCrawler('likes')
+    likes_crawler = TweetCrawler('depth_2')
     author_ids = likes_crawler.apply_function(get_user_ids)
     total_ids = set()
     for id_set in author_ids:
