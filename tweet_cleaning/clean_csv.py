@@ -127,7 +127,7 @@ def process_df(file, rep_universe):
                                   'referenced_tweets.replied_to.id', 'referenced_tweets.retweeted.id',
                                   'referenced_tweets.quoted.id'],
                          chunksize=453_241) as reader:  # chunksize calculated by estimating number of lines that will take up 3GB
-            for idx, chunk in progress(enumerate(reader), leave=False):
+            for idx, chunk in enumerate(progress(reader, leave=False)):
                 logging.info(f'Converting chunk #{idx}')
                 process_dataframe(chunk, file_name=file_name + str(idx), rep_universe=rep_universe) 
 

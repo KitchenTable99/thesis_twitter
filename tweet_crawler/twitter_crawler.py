@@ -5,7 +5,7 @@ from tqdm import tqdm as progress
 from typing import Callable, Generator, List, Literal, Set, Tuple, TypeVar
 
 
-CrawlerType = Literal['test', 'harvard', 'likes', 'left']
+CrawlerType = Literal['test', 'harvard', 'likes', 'left', 'depth_2']
 T = TypeVar('T')
 
 
@@ -15,7 +15,7 @@ DATA_PATH = '/home/ec2-user/congressional_tweets'
 class TweetCrawler:
 
     parquet_count: int
-    dfs: List[pd.DataFrame]
+    dfs: List[str]
 
     def __init__(self, crawler_type: CrawlerType):
         self.dfs = self.read_dfs(crawler_type)
@@ -26,19 +26,23 @@ class TweetCrawler:
         else:
             self.parquet_count = -1
 
-    def read_dfs(self, crawler_type: CrawlerType) -> List[pd.DataFrame]:
+    def read_dfs(self, crawler_type: CrawlerType) -> List[str]:
         if crawler_type == 'harvard':
             paths = [file for file in glob.glob(f'{DATA_PATH}/full_harvard/*parquet*', recursive=True) if 'likes' not in file]
+        elif crawler_type == 'depth_2':
+            paths = [file for file in glob.glob(f'{DATA_PATH}/depth_2/*parquet*', recursive=True) if 'likes' not in file]
         elif crawler_type == 'test':
             paths = [f'{DATA_PATH}/senators_115.parquet.gzip']
-        elif crawler_type =='left':
+        elif crawler_type == 'left':
             paths = [file for file in glob.glob(f'{DATA_PATH}/**/*parquet*', recursive=True) if 'likes' in file or 'retweets' in file]
         else:
             paths = [file for file in glob.glob(f'{DATA_PATH}/**/*parquet*', recursive=True) if 'likes' in file]
-        return [pd.read_parquet(path) for path in progress(paths, desc='Reading dataframes')]
+
+        return paths
 
     def apply_function(self, callable: Callable[[pd.DataFrame], T]) -> Generator[T, None, None]:
-        for df in self.dfs:
+        for df_str in progress(self.dfs):
+            df = pd.read_parquet(df_str)
             yield callable(df)
 
 
@@ -59,6 +63,18 @@ def get_user_ids(df: pd.DataFrame) -> Set[int]:
 
 def get_retweets(df: pd.DataFrame) -> pd.DataFrame:
     return df[df['tweet_type'] == 'retweet']
+
+
+def d2():
+    d2 = TweetCrawler('depth_2')
+    auth_ids = d2.apply_function(get_user_ids)
+
+    all_obtained = set()
+    for id_set in auth_ids:
+        all_obtained.update(id_set)
+
+    with open('obtained.pickle', 'wb') as fp:
+        pickle.dump(all_obtained, fp)
 
 
 def test():
@@ -82,7 +98,6 @@ def main():
         for user_id in all_op_tweets:
             fp.write(f'{user_id:.20f}')
             fp.write('\n')
-
 
 
 def likes():
@@ -109,4 +124,4 @@ def likes():
 
 
 if __name__ == "__main__":
-    likes()
+    d2()
