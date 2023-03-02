@@ -1,0 +1,29 @@
+program: quick_start_pytorch.py
+method: random
+name: initial_random
+metric:
+  goal: maximize
+  name: val_acc
+parameters:
+  hidden_layer_size:
+    distribution: log_uniform_values
+    min: 32
+    max: 1024
+  batch_size:
+    distribution: log_uniform_values
+    min: 2
+    max: 1024
+  epochs:
+    distribution: log_uniform_values
+    min: 2
+    max: 128
+  lr:
+    max: 0.1
+    min: 0.0001
+  regularization:
+    max: 0.7
+    min: 0.01
+  optimizer:
+    values:
+      - adam
+      - sdg
