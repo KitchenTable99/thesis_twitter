@@ -13,10 +13,9 @@ parameters:
     distribution: log_uniform_values
     min: 2
     max: 1024
-  epochs:
-    distribution: log_uniform_values
-    min: 2
-    max: 128
+  patience:
+    min: 1
+    max: 16
   lr:
     max: 0.1
     min: 0.0001
