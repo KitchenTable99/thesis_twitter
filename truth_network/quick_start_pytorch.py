@@ -1,14 +1,11 @@
 import torch
 from typing import Tuple, Literal
-from torch import nn, autograd
+from torch import nn
 from torch.utils.data import DataLoader, Dataset
-from torchvision import datasets
-from torchvision.transforms import ToTensor
 
 import wandb
 
 import pandas as pd
-import numpy as np
 
 from early_stopper import EarlyStopper
 
@@ -27,11 +24,11 @@ class TwitterDataset(Dataset):
     def __init__(self, file_name):
         df = pd.read_csv(file_name)
 
-        # x = df.loc[:, ~df.columns.isin(['tweet__fake', 'tweet__possibly_sensitive'])].astype('float32').values
-        x = df.loc[:, ~df.columns.isin(['tweet__fake'])].astype('float32').values
+        x = df.loc[:, ~df.columns.isin(['tweet__fake', 'tweet__possibly_sensitive'])].astype('float32').values
+        # x = df.loc[:, ~df.columns.isin(['tweet__fake'])].astype('float32').values
         y = df['tweet__fake'].values
-        print(f'unique values: {np.unique(y)}')
-        print(f'{x[:10] = }')
+        # print(f'unique values: {np.unique(y)}')
+        # print(f'{x[:10] = }')
 
         self.x_train = torch.tensor(x, dtype=torch.float32)
         self.y_train = torch.tensor(y, dtype=torch.float32)
@@ -91,7 +88,7 @@ def train(dataloader, model, loss_fn, optimizer, device: Device):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        
+
         # Bits for acc and loss
         train_loss += loss.item()
         pred[pred < 0.5] = 0
@@ -128,36 +125,36 @@ def test(dataloader, model: NeuralNetwork, loss_fn, device: Device):
 
 def main():
     wandb.init(project="liebrary-of-congress-throwaway", entity="davisai")
-    lr = .01
-    bs = 32
-    patience = 20
-    optimizer_type = 'adam'
-    hidden_layer_size = 16
-    regularization = 0
-    # lr = wandb.config.lr
-    # bs = int(wandb.config.batch_size)
-    # patience = wandb.config.patience
-    # optimizer_type = str(wandb.config.optimizer)
-    # hidden_layer_size = int(wandb.config.hidden_layer_size)
-    # regularization = wandb.config.regularization
+    # lr = .01
+    # bs = 32
+    # patience = 20
+    # optimizer_type = 'adam'
+    # hidden_layer_size = 16
+    # regularization = 0
+    lr = wandb.config.lr
+    bs = int(wandb.config.batch_size)
+    patience = wandb.config.patience
+    optimizer_type = str(wandb.config.optimizer)
+    hidden_layer_size = int(wandb.config.hidden_layer_size)
+    regularization = wandb.config.regularization
 
     device: Device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    training_data = TwitterDataset('/datasets/liebrary/small.csv')
-    test_data = TwitterDataset('/datasets/liebrary/small.csv')
+    training_data = TwitterDataset('/datasets/do-not-delete--liebrary-of-congress/train_normalized.csv')
+    test_data = TwitterDataset('/datasets/do-not-delete--liebrary-of-congress/test_normalized.csv')
 
     train_dataloader, test_dataloader = create_dataloaders(training_data, test_data, batch_size=bs)
 
-    model = NeuralNetwork(20, hidden_layer_size).to(device)
+    model = NeuralNetwork(184, hidden_layer_size).to(device)
     loss_fn = nn.BCEWithLogitsLoss()
     if optimizer_type == 'sgd':
         optimizer = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=regularization)
     else:
         optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=regularization)
-        
+
     early_stop_checker = EarlyStopper(patience=patience)
 
-    for epoch in range(500):
+    for epoch in range(100):
         train_loss, train_acc = train(train_dataloader, model, loss_fn, optimizer, device)
         val_loss, val_acc = test(test_dataloader, model, loss_fn, device)
 

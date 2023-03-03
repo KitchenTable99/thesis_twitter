@@ -17,9 +17,11 @@ parameters:
     min: 1
     max: 16
   lr:
+    distribution: log_uniform_values
     max: 0.1
-    min: 0.0001
+    min: 0.00001
   regularization:
+    distribution: log_uniform_values
     max: 0.7
     min: 0.01
   optimizer:
