@@ -8,6 +8,9 @@ from torchvision.transforms import ToTensor
 import wandb
 
 import pandas as pd
+import numpy as np
+
+from early_stopper import EarlyStopper
 
 Device = Literal['cuda', 'cpu']
 
@@ -23,20 +26,23 @@ def create_dataloaders(training_data, testing_data, batch_size: int) -> Tuple[Da
 class TwitterDataset(Dataset):
     def __init__(self, file_name):
         df = pd.read_csv(file_name)
-        
-        x = df.loc[:, ~df.columns.isin(['tweet__fake', 'tweet__possibly_sensitive'])].astype('float32').values
-        # x = df.loc[:, ~df.columns.isin(['tweet__fake'])].astype('float32').values
+
+        # x = df.loc[:, ~df.columns.isin(['tweet__fake', 'tweet__possibly_sensitive'])].astype('float32').values
+        x = df.loc[:, ~df.columns.isin(['tweet__fake'])].astype('float32').values
         y = df['tweet__fake'].values
-        
-        self.x_train=torch.tensor(x,dtype=torch.float32)
-        self.y_train=torch.tensor(y,dtype=torch.float32)
+        print(f'unique values: {np.unique(y)}')
+        print(f'{x[:10] = }')
+
+        self.x_train = torch.tensor(x, dtype=torch.float32)
+        self.y_train = torch.tensor(y, dtype=torch.float32)
 
     def __len__(self):
         return len(self.y_train)
 
-    def __getitem__(self,idx):
+    def __getitem__(self, idx):
         return self.x_train[idx], self.y_train[idx]
-    
+
+
 class Print(nn.Module):
     def __init__(self):
         super(Print, self).__init__()
@@ -55,6 +61,13 @@ class NeuralNetwork(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden_layer_size, 1),
         )
+        self.apply(self._init_weights)
+
+    def _init_weights(self, module):
+        if isinstance(module, nn.Linear):
+            module.weight.data.normal_(mean=0.0, std=1.0)
+            if module.bias is not None:
+                module.bias.data.zero_()
 
     def forward(self, x):
         return self.linear_relu_stack(x)
@@ -65,8 +78,10 @@ def train(dataloader, model, loss_fn, optimizer, device: Device):
     model.train()
     correct, train_loss = 0, 0
     for batch, (X, y) in enumerate(dataloader):
+        # wandb.log({'shape X[0]': X.shape[0],
+        #            'shape X[1]': X.shape[1],
+        #            'shape y[0]': y.shape[0]})
         X, y = X.to(device), y.reshape((-1, 1)).to(device)
-        
 
         # Compute prediction error
         pred = model(X)
@@ -79,13 +94,13 @@ def train(dataloader, model, loss_fn, optimizer, device: Device):
         
         # Bits for acc and loss
         train_loss += loss.item()
-        pred[pred < 0] = 0
-        pred[pred >= 0] = 1
+        pred[pred < 0.5] = 0
+        pred[pred >= 0.5] = 1
+        # wandb.log({'sum of pred': torch.sum(pred)})
         correct += (pred == y).type(torch.float).sum().item()
 
-    wandb.log({'sum_sequential_0': torch.sum(model.linear_relu_stack[0].weight.data)})
-    wandb.log({'sum_sequential_1': torch.sum(model.linear_relu_stack[1].weight.data)})
-    wandb.log({'sum_sequential_2': torch.sum(model.linear_relu_stack[2].weight.data)})
+    # wandb.log({'sum_sequential_0': torch.sum(model.linear_relu_stack[0].weight.data),
+               # 'sum_sequential_2': torch.sum(model.linear_relu_stack[2].weight.data)})
     avg_loss = train_loss / len(dataloader)
     acc = correct / size
 
@@ -102,8 +117,8 @@ def test(dataloader, model: NeuralNetwork, loss_fn, device: Device):
             X, y = X.to(device), y.reshape((-1, 1)).to(device)
             pred = model(X)
             test_loss += loss_fn(pred, y).item()
-            pred[pred < 0] = 0
-            pred[pred >= 0] = 1
+            pred[pred < 0.5] = 0
+            pred[pred >= 0.5] = 1
             correct += (pred == y).type(torch.float).sum().item()
     test_loss /= num_batches
     correct /= size
@@ -113,15 +128,15 @@ def test(dataloader, model: NeuralNetwork, loss_fn, device: Device):
 
 def main():
     wandb.init(project="liebrary-of-congress-throwaway", entity="davisai")
-    lr = .5
+    lr = .01
     bs = 32
-    epochs = 10
+    patience = 20
     optimizer_type = 'adam'
-    hidden_layer_size = 100
-    regularization = .9
+    hidden_layer_size = 16
+    regularization = 0
     # lr = wandb.config.lr
     # bs = int(wandb.config.batch_size)
-    # epochs = int(wandb.config.epochs)
+    # patience = wandb.config.patience
     # optimizer_type = str(wandb.config.optimizer)
     # hidden_layer_size = int(wandb.config.hidden_layer_size)
     # regularization = wandb.config.regularization
@@ -139,8 +154,10 @@ def main():
         optimizer = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=regularization)
     else:
         optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=regularization)
+        
+    early_stop_checker = EarlyStopper(patience=patience)
 
-    for epoch in range(epochs):
+    for epoch in range(500):
         train_loss, train_acc = train(train_dataloader, model, loss_fn, optimizer, device)
         val_loss, val_acc = test(test_dataloader, model, loss_fn, device)
 
@@ -151,8 +168,9 @@ def main():
             'val_loss': val_loss,
             'val_acc': val_acc
         })
+        if early_stop_checker.stop_early(val_loss):
+            break
 
 
 if __name__ == '__main__':
     main()
-
