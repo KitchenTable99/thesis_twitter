@@ -90,14 +90,23 @@ def main():
 def likes():
     likes_crawler = TweetCrawler('depth_2')
     author_ids = likes_crawler.apply_function(get_user_ids)
-    total_ids = set()
+    fuckups = set()
+    seen = set()
     for id_set in author_ids:
-        total_ids.update(id_set)
+        for id in id_set:
+            if id in seen:
+                fuckups.add(id)
+            else:
+                seen.add(id)
 
-    with open('liked_user_ids.txt', 'w') as fp:
-        for user_id in total_ids:
-            fp.write(str(user_id))
-            fp.write('\n')
+    print(fuckups)
+    with open('fuckups.pickle', 'wb') as fp:
+        pickle.dump(fuckups, fp)
+
+    # with open('liked_user_ids.txt', 'w') as fp:
+    #     for user_id in total_ids:
+    #         fp.write(str(user_id))
+    #         fp.write('\n')
 
     # likes_gb = likes_crawler.apply_function(get_count)
     # count = 0
