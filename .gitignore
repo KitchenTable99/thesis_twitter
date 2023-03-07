@@ -1,4 +1,5 @@
 **/data
+*.csv
 *.pickle
 *.zip
 **/__pycache__
