@@ -29,7 +29,7 @@ class TweetCrawler:
         elif crawler_type == 'test':
             paths = [f'{DATA_PATH}/senators_115.parquet.gzip']
         elif crawler_type =='left':
-            paths = [file for file in glob.glob(f'{DATA_PATH}/**/*parquet*', recursive=True) if 'likes' in file or 'retweets' in file]
+            paths = [file for file in glob.glob(f'{DATA_PATH}/**/*parquet*', recursive=True) if 'likes' in file or 'retweets' in file or 'originally_banned' in file]
         elif crawler_type == 'depth_2':
             paths = [file for file in glob.glob(f'{DATA_PATH}/depth_2/*parquet*', recursive=True)]
         else:
@@ -119,26 +119,31 @@ def extract_depth_2():
 
     all_depth_features.to_parquet('user_depth_features.parquet.gzip', compression='gzip', index=False)
 
+
 def likes():
-    likes_crawler = TweetCrawler('depth_2')
+    likes_crawler = TweetCrawler('left')
     author_ids = likes_crawler.apply_function(get_user_ids)
-    fuckups = set()
-    seen = set()
+
+    total_ids = set()
     for id_set in author_ids:
-        for id in id_set:
-            if id in seen:
-                fuckups.add(id)
-            else:
-                seen.add(id)
+        total_ids.update(id_set)
+    # fuckups = set()
+    # seen = set()
+    # for id_set in author_ids:
+    #     for id in id_set:
+    #         if id in seen:
+    #             fuckups.add(id)
+    #         else:
+    #             seen.add(id)
+    #
+    # print(fuckups)
+    # with open('fuckups.pickle', 'wb') as fp:
+    #     pickle.dump(fuckups, fp)
 
-    print(fuckups)
-    with open('fuckups.pickle', 'wb') as fp:
-        pickle.dump(fuckups, fp)
-
-    # with open('liked_user_ids.txt', 'w') as fp:
-    #     for user_id in total_ids:
-    #         fp.write(str(user_id))
-    #         fp.write('\n')
+    with open('liked_user_ids.txt', 'w') as fp:
+        for user_id in total_ids:
+            fp.write(str(user_id))
+            fp.write('\n')
 
     # likes_gb = likes_crawler.apply_function(get_count)
     # count = 0

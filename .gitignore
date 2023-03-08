@@ -6,3 +6,7 @@
 *.log
 *.ipynb_checkpoints
 *.h5
+*.gzip
+*.jsonl
+
+elon_unban/out/try_1.parquet.gzip
