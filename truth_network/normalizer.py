@@ -71,7 +71,8 @@ def main():
                           'user__has_url', 'user__is_english',
                           'user__more_than_50_tweets', 'tweet__possibly_sensitive_news',
                           'tweet__day_of_month_0', 'tweet__day_of_week_7',
-                          'tweet__hour_of_day_24'])
+                          'tweet__hour_of_day_24', 'user__tweets_per_week', 'user__has_country',
+                          'tweet__is_quote_status', 'tweet__user_id'])
     df = df.rename(columns={'user__tweets_in_different_lang': 'user__nr_languages_tweeted'})
 
     needs_inference = df['tweet__possibly_sensitive'].isna()
@@ -83,7 +84,7 @@ def main():
     knn = KNeighborsRegressor(n_neighbors=2)
     print(df.isna().any()[lambda x: x])
     knn.fit(knn_train_x, knn_train_y)
-    knn_test_x['tweet__fake'] = knn.predict(knn_test_x)
+    knn_test_x['tweet__possibly_sensitive'] = knn.predict(knn_test_x)
 
     no_inference = df[~needs_inference]
     finished_inference = pd.concat([knn_test_x, no_inference])

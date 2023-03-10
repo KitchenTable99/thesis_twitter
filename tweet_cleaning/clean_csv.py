@@ -55,9 +55,15 @@ def process_dataframe(df, file_name, rep_universe: RepresentativeUniverse):
         # process columns
         df['tweet_type'] = df.apply(determine_tweet_type, axis=1)
         df['congressional_like'] = True if 'likes' in file_name else False
+        df['tweet__has_place'] = df['geo.place_id'].apply(lambda x: pd.isna(x))
+        df['tweet__nr_of_medias'] = df['attachments.media'].apply(lambda x: x.count('type') if not pd.isna(x) else 0)
+        df['tweet__contains_media'] = df['tweet__nr_of_medias'].apply(lambda x: x > 0)
 
         # drop unneeded columns
-        df = df.drop(columns=['referenced_tweets.replied_to.id', 'referenced_tweets.quoted.id'])
+        df = df.drop(columns=['referenced_tweets.replied_to.id',
+                              'referenced_tweets.quoted.id',
+                              'geo.place_id',
+                              'attachments.media'])
 
         # drop unneeded rows
         if 'likes' in file_name:
@@ -68,6 +74,7 @@ def process_dataframe(df, file_name, rep_universe: RepresentativeUniverse):
                 logging.critical(f'{rep_id = } fucked up somehow')
                 raise NotImplemented
             df = remove_out_of_office_tweets(df, rep)
+
 
         # rename columns
         df = df.rename(columns={'public_metrics.like_count': 'like_count',
@@ -113,7 +120,7 @@ def process_df(file, rep_universe):
                                                 'possibly_sensitive', 'entities.cashtags', 'entities.hashtags',
                                                 'entities.mentions', 'entities.urls', 'author.username', 'author.name',
                                                 'referenced_tweets.replied_to.id', 'referenced_tweets.retweeted.id',
-                                                'referenced_tweets.quoted.id'])
+                                                'referenced_tweets.quoted.id', 'geo.place_id', 'attachments.media'])
         process_dataframe(df, file_name, rep_universe)
     else:
         logging.info('File too big. Breaking into chunks.')
@@ -125,7 +132,7 @@ def process_df(file, rep_universe):
                                   'possibly_sensitive', 'entities.cashtags', 'entities.hashtags',
                                   'entities.mentions', 'entities.urls', 'author.username', 'author.name',
                                   'referenced_tweets.replied_to.id', 'referenced_tweets.retweeted.id',
-                                  'referenced_tweets.quoted.id'],
+                                  'referenced_tweets.quoted.id', 'geo.place_id', 'attachments.media'],
                          chunksize=453_241) as reader:  # chunksize calculated by estimating number of lines that will take up 3GB
             for idx, chunk in enumerate(progress(reader, leave=False)):
                 logging.info(f'Converting chunk #{idx}')
