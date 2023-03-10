@@ -58,6 +58,7 @@ def main():
 
     with open('one_hot.pickle', 'rb') as fp:
         one_hot_columns = pickle.load(fp)
+        one_hot_columns.remove('tweet__hour_of_day')
     oh_dfs = []
     for column in one_hot_columns:
         num_categories = len(df[column].unique()) + 1 if column != 'user__created_hour_of_day' else 24
@@ -71,8 +72,8 @@ def main():
                           'user__has_url', 'user__is_english',
                           'user__more_than_50_tweets', 'tweet__possibly_sensitive_news',
                           'tweet__day_of_month_0', 'tweet__day_of_week_7',
-                          'tweet__hour_of_day_24', 'user__tweets_per_week', 'user__has_country',
-                          'tweet__is_quote_status', 'tweet__user_id'])
+                           'user__tweets_per_week', 'user__has_country',
+                          'tweet__is_quote_status', 'tweet__user_id', 'tweet__hour_of_day'])
     df = df.rename(columns={'user__tweets_in_different_lang': 'user__nr_languages_tweeted'})
 
     needs_inference = df['tweet__possibly_sensitive'].isna()
