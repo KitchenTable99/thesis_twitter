@@ -13,4 +13,6 @@ TwitterFakeNews/*
 rehydrating/*
 *.pem
 
-elon_unban/out/try_1.parquet.gzip
+elon_unban/out/*
+elon_unban/source/*
+**/wandb/*
