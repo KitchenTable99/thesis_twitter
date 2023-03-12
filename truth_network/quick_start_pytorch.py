@@ -24,8 +24,8 @@ class TwitterDataset(Dataset):
     def __init__(self, file_name):
         df = pd.read_csv(file_name)
 
-        x = df.loc[:, ~df.columns.isin(['tweet__fake', 'tweet__possibly_sensitive'])].astype('float32').values
-        # x = df.loc[:, ~df.columns.isin(['tweet__fake'])].astype('float32').values
+        # x = df.loc[:, ~df.columns.isin(['tweet__fake', 'tweet__possibly_sensitive'])].astype('float32').values
+        x = df.loc[:, ~df.columns.isin(['tweet__fake'])].astype('float32').values
         y = df['tweet__fake'].values
         # print(f'unique values: {np.unique(y)}')
         # print(f'{x[:10] = }')
@@ -140,12 +140,12 @@ def main():
 
     device: Device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    training_data = TwitterDataset('/datasets/do-not-delete--liebrary-of-congress/train_normalized.csv')
-    test_data = TwitterDataset('/datasets/do-not-delete--liebrary-of-congress/test_normalized.csv')
+    training_data = TwitterDataset('~/datasets/do-not-delete--liebrary-of-congress/train_normalized.csv')
+    test_data = TwitterDataset('~/datasets/do-not-delete--liebrary-of-congress/test_normalized.csv')
 
     train_dataloader, test_dataloader = create_dataloaders(training_data, test_data, batch_size=bs)
 
-    model = NeuralNetwork(184, hidden_layer_size).to(device)
+    model = NeuralNetwork(156, hidden_layer_size).to(device)
     loss_fn = nn.BCEWithLogitsLoss()
     if optimizer_type == 'sgd':
         optimizer = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=regularization)

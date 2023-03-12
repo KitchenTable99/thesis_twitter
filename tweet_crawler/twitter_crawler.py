@@ -60,6 +60,10 @@ def get_user_ids(df: pd.DataFrame) -> Set[int]:
     return set(df['author_id'].to_list())
 
 
+def get_original_tweeter_ids(df: pd.DataFrame) -> Set[int]:
+    return set(df['uthor_id'].to_list())
+
+
 def get_retweets(df: pd.DataFrame) -> pd.DataFrame:
     return df[df['tweet_type'] == 'retweet']
 
@@ -121,7 +125,7 @@ def extract_depth_2():
 
 
 def likes():
-    likes_crawler = TweetCrawler('left')
+    likes_crawler = TweetCrawler('likes')
     author_ids = likes_crawler.apply_function(get_user_ids)
 
     total_ids = set()
@@ -140,7 +144,7 @@ def likes():
     # with open('fuckups.pickle', 'wb') as fp:
     #     pickle.dump(fuckups, fp)
 
-    with open('liked_user_ids.txt', 'w') as fp:
+    with open('have.txt', 'w') as fp:
         for user_id in total_ids:
             fp.write(str(user_id))
             fp.write('\n')
