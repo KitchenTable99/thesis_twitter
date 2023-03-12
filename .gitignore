@@ -8,5 +8,9 @@
 *.h5
 *.gzip
 *.jsonl
+**/.DS_Store
+TwitterFakeNews/*
+rehydrating/*
+*.pem
 
 elon_unban/out/try_1.parquet.gzip
