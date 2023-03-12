@@ -45,6 +45,10 @@ class TweetCrawler:
             yield callable(df)
 
 
+def get_original_ids(df: pd.DataFrame) -> Set[int]:
+    return set(df['original_tweet_id'].to_list())
+
+
 def get_ids(df: pd.DataFrame) -> Set[int]:
     return set(df['id'].to_list())
 
@@ -76,8 +80,15 @@ def test():
 
 def main():
     left_crawler = TweetCrawler('retweets')
-    retweets = left_crawler.apply_function(len)
-    print(f'There are {sum(retweets)} retweets in the retweet folder')
+    retweets = left_crawler.apply_function(get_original_ids)
+    all_originals = set()
+    for r in retweets:
+        all_originals.update(r)
+    print(f'There are {len(all_originals)} retweets in the retweet folder')
+
+    to_write = '\n'.join(str(i) for i in all_originals)
+    with open('all_originals.txt', 'w') as fp:
+        fp.write(to_write)
 
 
 def get_user_tweets(df):
@@ -164,7 +175,7 @@ def likes():
 
 
 if __name__ == "__main__":
-    likes()
-    main()
+    # likes()
+    # main()
     left()
 
