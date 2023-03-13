@@ -1,30 +1,31 @@
-program: quick_start_pytorch.py
 method: random
-name: final_tuning
 metric:
   goal: maximize
   name: val_acc
+name: initial_random
 parameters:
-  hidden_layer_size:
-    distribution: log_uniform_values
-    min: 2
-    max: 512
   batch_size:
     distribution: log_uniform_values
+    max: 1024
     min: 2
-    max: 128
-  patience:
-    min: 4
-    max: 8
+  hidden_layer_size:
+    distribution: log_uniform_values
+    max: 1024
+    min: 32
   lr:
     distribution: log_uniform_values
-    max: 0.01
-    min: 0.0000001
-  regularization:
-    distribution: log_uniform_values
-    max: 0.01
-    min: 0.0000001
+    max: 0.1
+    min: 1e-05
   optimizer:
     values:
       - adam
       - sdg
+  patience:
+    distribution: int_uniform
+    max: 16
+    min: 1
+  regularization:
+    distribution: log_uniform_values
+    max: 0.7
+    min: 0.01
+program: quick_start_pytorch.py
