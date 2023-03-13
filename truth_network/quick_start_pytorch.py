@@ -1,4 +1,6 @@
 import torch
+from copy import deepcopy
+import numpy as np
 from typing import Tuple, Literal
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
@@ -124,19 +126,23 @@ def test(dataloader, model: NeuralNetwork, loss_fn, device: Device):
 
 
 def main():
-    wandb.init(project="liebrary-of-congress-throwaway", entity="davisai")
-    # lr = .01
-    # bs = 32
-    # patience = 20
-    # optimizer_type = 'adam'
-    # hidden_layer_size = 16
-    # regularization = 0
-    lr = wandb.config.lr
-    bs = int(wandb.config.batch_size)
-    patience = wandb.config.patience
-    optimizer_type = str(wandb.config.optimizer)
-    hidden_layer_size = int(wandb.config.hidden_layer_size)
-    regularization = wandb.config.regularization
+    name = "giddy-final"
+    wandb.init(project="liebrary-of-congress-throwaway",
+               entity="davisai",
+               name=name)
+    bs = 42
+    hidden_layer_size = 219
+    lr = 0.0007447028032999965
+    optimizer_type = 'adam'
+    patience = 6
+    regularization = 0.000002793180757767303
+    manual_epoch = 11
+    # lr = wandb.config.lr
+    # bs = int(wandb.config.batch_size)
+    # patience = wandb.config.patience
+    # optimizer_type = str(wandb.config.optimizer)
+    # hidden_layer_size = int(wandb.config.hidden_layer_size)
+    # regularization = wandb.config.regularization
 
     device: Device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -154,9 +160,14 @@ def main():
 
     early_stop_checker = EarlyStopper(patience=patience)
 
-    for epoch in range(100):
+    best_val_loss = np.inf
+    best_model_state = {}
+    for epoch in range(200):
         train_loss, train_acc = train(train_dataloader, model, loss_fn, optimizer, device)
         val_loss, val_acc = test(test_dataloader, model, loss_fn, device)
+        if val_loss < best_val_loss:
+            best_model_state = deepcopy(model.state_dict())
+            best_val_loss = val_loss
 
         wandb.log({
             'epoch': epoch + 1,
@@ -165,8 +176,11 @@ def main():
             'val_loss': val_loss,
             'val_acc': val_acc
         })
+        if epoch == manual_epoch:
+            torch.save(model.state_dict(), f'out/{name}_manual.pth')
         if early_stop_checker.stop_early(val_loss):
             break
+    torch.save(best_model_state, f'out/{name}_best.pth')
 
 
 if __name__ == '__main__':
