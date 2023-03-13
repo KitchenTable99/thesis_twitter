@@ -132,11 +132,19 @@ def left():
     for id_set in author_ids:
         total_ids.update(id_set)
 
-    with open('have.txt', 'w') as fp:
-        for user_id in total_ids:
-            fp.write(str(user_id))
-            fp.write('\n')
+    with open('have.pickle', 'wb') as fp:
+        pickle.dump(total_ids, fp)
 
+
+def harvard_users():
+    likes_crawler = TweetCrawler('harvard')
+    author_ids = likes_crawler.apply_function(get_user_ids)
+    total_ids = set()
+    for id_set in author_ids:
+        total_ids.update(id_set)
+
+    with open('harvard_users.pickle', 'wb') as fp:
+        pickle.dump(total_ids, fp)
 
 
 def likes():
@@ -178,4 +186,5 @@ if __name__ == "__main__":
     # likes()
     # main()
     left()
+    harvard_users()
 
