@@ -26,7 +26,7 @@ def get_ynh(col):
 
 
 def get_columns():
-    df = pd.read_csv('trimmed.csv')
+    df = pd.read_csv('testset_nn.csv')
 
     normalize = []
     ignore = []
@@ -48,13 +48,12 @@ def get_columns():
         pickle.dump(one_hot, fp)
 
 
-
 def main():
-    df = pd.read_csv('trimmed.csv')
+    df = pd.read_csv('testset_nn.csv', sep=';')
 
     with open('normalize.pickle', 'rb') as fp:
         normalize_columns = pickle.load(fp)
-    df[normalize_columns] = (df[normalize_columns] - df[normalize_columns].mean()) / df[normalize_columns].std()
+    # df[normalize_columns] = (df[normalize_columns] - df[normalize_columns].mean()) / df[normalize_columns].std()
 
     with open('one_hot.pickle', 'rb') as fp:
         one_hot_columns = pickle.load(fp)
@@ -92,10 +91,10 @@ def main():
     df = finished_inference
     df.to_csv('inferred.csv', index=False)
 
-    train, test = train_test_split(df, test_size=.1)
-
-    train.to_csv('train_normalized.csv', index=False)
-    test.to_csv('test_normalized.csv', index=False)
+    # train, test = train_test_split(df, test_size=.1)
+    #
+    # train.to_csv('train_normalized.csv', index=False)
+    # test.to_csv('test_normalized.csv', index=False)
 
 
 if __name__ == "__main__":
