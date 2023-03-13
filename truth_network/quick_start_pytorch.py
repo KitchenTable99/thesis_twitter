@@ -126,23 +126,21 @@ def test(dataloader, model: NeuralNetwork, loss_fn, device: Device):
 
 
 def main():
-    name = "giddy-final"
     wandb.init(project="liebrary-of-congress-throwaway",
-               entity="davisai",
-               name=name)
-    bs = 42
-    hidden_layer_size = 219
-    lr = 0.0007447028032999965
-    optimizer_type = 'adam'
-    patience = 6
-    regularization = 0.000002793180757767303
-    manual_epoch = 11
-    # lr = wandb.config.lr
-    # bs = int(wandb.config.batch_size)
-    # patience = wandb.config.patience
-    # optimizer_type = str(wandb.config.optimizer)
-    # hidden_layer_size = int(wandb.config.hidden_layer_size)
-    # regularization = wandb.config.regularization
+               entity="davisai")
+    # bs = 42
+    # hidden_layer_size = 219
+    # lr = 0.0007447028032999965
+    # optimizer_type = 'adam'
+    # patience = 6
+    # regularization = 0.000002793180757767303
+    # manual_epoch = 11
+    lr = wandb.config.lr
+    bs = int(wandb.config.batch_size)
+    patience = wandb.config.patience
+    optimizer_type = str(wandb.config.optimizer)
+    hidden_layer_size = int(wandb.config.hidden_layer_size)
+    regularization = wandb.config.regularization
 
     device: Device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -176,11 +174,11 @@ def main():
             'val_loss': val_loss,
             'val_acc': val_acc
         })
-        if epoch == manual_epoch:
-            torch.save(model.state_dict(), f'out/{name}_manual.pth')
+        # if epoch == manual_epoch:
+        #     torch.save(model.state_dict(), f'out/{name}_manual.pth')
         if early_stop_checker.stop_early(val_loss):
             break
-    torch.save(best_model_state, f'out/{name}_best.pth')
+    torch.save(best_model_state, f'out/regularization_{regularization}_opt_{optimizer_type}_best.pth')
 
 
 if __name__ == '__main__':

@@ -61,6 +61,8 @@ def main():
     oh_dfs = []
     for column in one_hot_columns:
         num_categories = len(df[column].unique()) + 1 if column != 'user__created_hour_of_day' else 24
+        num_categories = 32 if column == 'tweet__day_of_month' else num_categories
+        # TODO: map the column to the proper value
         oh_matrix = convert_int_code(df[column].to_list(), num_categories)
         oh_dfs.append(make_one_hot_df(oh_matrix, column))
 
@@ -72,7 +74,7 @@ def main():
                           'user__more_than_50_tweets', 'tweet__possibly_sensitive_news',
                           'tweet__day_of_month_0', 'tweet__day_of_week_7',
                            'user__tweets_per_week', 'user__has_country',
-                          'tweet__is_quote_status', 'tweet__user_id', 'tweet__hour_of_day'])
+                          'tweet__is_quote_status', 'tweet__user_id', 'tweet__hour_of_day'], errors='ignore')
     df = df.rename(columns={'user__tweets_in_different_lang': 'user__nr_languages_tweeted'})
 
     needs_inference = df['tweet__possibly_sensitive'].isna()
@@ -82,14 +84,14 @@ def main():
     knn_test_x = all_but_inference[needs_inference]
 
     knn = KNeighborsRegressor(n_neighbors=2)
-    print(df.isna().any()[lambda x: x])
-    knn.fit(knn_train_x, knn_train_y)
-    knn_test_x['tweet__possibly_sensitive'] = knn.predict(knn_test_x)
+    if df.isna().any().sum() != 0:
+        knn.fit(knn_train_x, knn_train_y)
+        knn_test_x['tweet__possibly_sensitive'] = knn.predict(knn_test_x)
 
-    no_inference = df[~needs_inference]
-    finished_inference = pd.concat([knn_test_x, no_inference])
-    df = finished_inference
-    df.to_csv('inferred.csv', index=False)
+        no_inference = df[~needs_inference]
+        finished_inference = pd.concat([knn_test_x, no_inference])
+        df = finished_inference
+    df.to_csv('testset_nn_normalized.csv', index=False)
 
     # train, test = train_test_split(df, test_size=.1)
     #
